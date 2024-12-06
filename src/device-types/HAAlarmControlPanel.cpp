@@ -22,17 +22,11 @@ HAAlarmControlPanel::HAAlarmControlPanel(
     _entityCategory(nullptr),
     _commandCallback(nullptr),
     _payloadArmAway(nullptr),
-    _armAwayCallback(nullptr),
     _payloadArmHome(nullptr),
-    _armHomeCallback(nullptr),
     _payloadArmNight(nullptr),
-    _armNightCallback(nullptr),
     _payloadArmVacation(nullptr),
-    _armVacationCallback(nullptr),
     _payloadDisarm(nullptr),
-    _disarmCallback(nullptr),
-    _payloadTrigger(nullptr),
-    _triggerCallback(nullptr)
+    _payloadTrigger(nullptr)
 {
     _supportedFeaturesSerializer = new HASerializerArray(4);
 }
