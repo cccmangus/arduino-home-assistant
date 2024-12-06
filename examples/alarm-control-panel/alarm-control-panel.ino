@@ -10,7 +10,7 @@ HADevice device(mac, sizeof(mac));
 HAMqtt mqtt(client, device);
 
 // "myAlarmPanel" is the unique ID of the panel. Here we also specify what capabilities we want HA to present to the user.
-HAAlarmControlPanel panel("myAlarmPanel", HAAlarmControlPanel::ArmAway | HAAlaramControlPanel::ArmHome | HAAlarmControlPanel::Trigger);
+HAAlarmControlPanel panel("myAlarmPanel", HAAlarmControlPanel::ArmAway | HAAlarmControlPanel::ArmHome | HAAlarmControlPanel::Trigger);
 
 // The command callback that gets called when the user interacts with the panel in HA. Here's where we modify the real alarm 
 // panel state and then report back to HA.
