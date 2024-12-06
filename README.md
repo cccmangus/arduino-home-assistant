@@ -24,7 +24,7 @@ but I successfully use it on ESP8266/ESP8255 boards in my projects.
 
 | Home Assistant type | Supported |
 | ------------------- | :--------: |
-| Alarm control panel |     ❌     |
+| Alarm control panel |     ✅     |
 | Binary sensor       |     ✅     |
 | Button              |     ✅     |
 | Camera              |     ✅     |
