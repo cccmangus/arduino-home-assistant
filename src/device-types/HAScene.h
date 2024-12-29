@@ -5,7 +5,11 @@
 
 #ifndef EX_ARDUINOHA_SCENE
 
+#if defined(ESP32) || defined(ESP8266)
+#define HASCENE_CALLBACK(name) std::function<void(HAScene* sender)> name
+#else
 #define HASCENE_CALLBACK(name) void (*name)(HAScene* sender)
+#endif
 
 /**
  * HAScene adds a new scene to the Home Assistant that triggers your callback once activated.

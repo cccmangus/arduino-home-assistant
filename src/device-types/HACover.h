@@ -5,7 +5,11 @@
 
 #ifndef EX_ARDUINOHA_COVER
 
+#if defined(ESP32) || defined(ESP8266)
+#define HACOVER_CALLBACK(name) std::function<void(CoverCommand cmd, HACover* sender)> name
+#else
 #define HACOVER_CALLBACK(name) void (*name)(CoverCommand cmd, HACover* sender)
+#endif
 
 /**
  * HACover allows to control a cover (such as blinds, a roller shutter or a garage door).

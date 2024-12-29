@@ -5,7 +5,12 @@
 
 #ifndef EX_ARDUINOHA_BUTTON
 
+#if defined(ESP32) || defined(ESP8266)
+#define HABUTTON_CALLBACK(name) std::function<void(HAButton* sender)> name
+#else
 #define HABUTTON_CALLBACK(name) void (*name)(HAButton* sender)
+#endif
+
 
 /**
  * HAButton represents a button that's displayed in the Home Assistant panel and

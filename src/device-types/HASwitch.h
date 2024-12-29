@@ -5,7 +5,13 @@
 
 #ifndef EX_ARDUINOHA_SWITCH
 
+
+#if defined(ESP32) || defined(ESP8266)
+#define HASWITCH_CALLBACK(name) std::function<void(bool state, HASwitch* sender)> name
+#else
 #define HASWITCH_CALLBACK(name) void (*name)(bool state, HASwitch* sender)
+#endif
+
 
 /**
  * HASwitch allows to display on/off switch in the HA panel and receive commands on your device.

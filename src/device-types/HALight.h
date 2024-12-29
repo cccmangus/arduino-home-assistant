@@ -6,10 +6,29 @@
 
 #ifndef EX_ARDUINOHA_LIGHT
 
+#if defined(ESP32) || defined(ESP8266)
+#define HALIGHT_STATE_CALLBACK(name) std::function<void(bool state, HALight* sender)> name
+#else
 #define HALIGHT_STATE_CALLBACK(name) void (*name)(bool state, HALight* sender)
+#endif
+
+#if defined(ESP32) || defined(ESP8266)
+#define HALIGHT_BRIGHTNESS_CALLBACK(name) std::function<void(uint8_t brightness, HALight* sender)> name
+#else
 #define HALIGHT_BRIGHTNESS_CALLBACK(name) void (*name)(uint8_t brightness, HALight* sender)
+#endif
+
+#if defined(ESP32) || defined(ESP8266)
+#define HALIGHT_COLOR_TEMP_CALLBACK(name) std::function<void(uint16_t temperature, HALight* sender)> name
+#else
 #define HALIGHT_COLOR_TEMP_CALLBACK(name) void (*name)(uint16_t temperature, HALight* sender)
+#endif
+
+#if defined(ESP32) || defined(ESP8266)
+#define HALIGHT_RGB_COLOR_CALLBACK(name) std::function<void(HALight::RGBColor color, HALight* sender)> name
+#else
 #define HALIGHT_RGB_COLOR_CALLBACK(name) void (*name)(HALight::RGBColor color, HALight* sender)
+#endif
 
 /**
  * HALight allows adding a controllable light in the Home Assistant panel.

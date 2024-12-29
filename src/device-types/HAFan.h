@@ -6,8 +6,17 @@
 
 #ifndef EX_ARDUINOHA_FAN
 
+#if defined(ESP32) || defined(ESP8266)
+#define HAFAN_STATE_CALLBACK(name) std::function<void(bool state, HAFan* sender)> name
+#else
 #define HAFAN_STATE_CALLBACK(name) void (*name)(bool state, HAFan* sender)
+#endif
+
+#if defined(ESP32) || defined(ESP8266)
+#define HAFAN_SPEED_CALLBACK(name) std::function<void(uint16_t speed, HAFan* sender)> name
+#else
 #define HAFAN_SPEED_CALLBACK(name) void (*name)(uint16_t speed, HAFan* sender)
+#endif
 
 /**
  * HAFan allows adding a controllable fan in the Home Assistant panel.

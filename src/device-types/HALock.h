@@ -5,7 +5,11 @@
 
 #ifndef EX_ARDUINOHA_LOCK
 
+#if defined(ESP32) || defined(ESP8266)
+#define HALOCK_CALLBACK(name) std::function<void(LockCommand command, HALock* sender)> name
+#else
 #define HALOCK_CALLBACK(name) void (*name)(LockCommand command, HALock* sender)
+#endif
 
 /**
  * HALock allows to implement a custom lock (for example: door lock)

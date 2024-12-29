@@ -16,7 +16,11 @@
     inline void setCurrentState(const type state) \
         { setCurrentState(HANumeric(state, _precision)); }
 
+#if defined(ESP32) || defined(ESP8266)
+#define HANUMBER_CALLBACK(name) std::function<void(HANumeric number, HANumber* sender)> name
+#else
 #define HANUMBER_CALLBACK(name) void (*name)(HANumeric number, HANumber* sender)
+#endif
 
 /**
  * HANumber adds a slider or a box in the Home Assistant panel

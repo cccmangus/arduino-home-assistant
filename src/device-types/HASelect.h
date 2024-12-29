@@ -7,7 +7,11 @@
 
 class HASerializerArray;
 
+#if defined(ESP32) || defined(ESP8266)
+#define HASELECT_CALLBACK(name) std::function<void(int8_t index, HASelect* sender)> name
+#else
 #define HASELECT_CALLBACK(name) void (*name)(int8_t index, HASelect* sender)
+#endif
 
 /**
  * HASelect adds a dropdown with options in the Home Assistant panel.

@@ -26,11 +26,35 @@
     inline void setCurrentTargetTemperature(const type temperature) \
         { setCurrentTargetTemperature(HANumeric(temperature, _precision)); }
 
+#if defined(ESP32) || defined(ESP8266)
+#define HAHVAC_CALLBACK_BOOL(name) std::function<void(bool state, HAHVAC* sender)> name
+#else
 #define HAHVAC_CALLBACK_BOOL(name) void (*name)(bool state, HAHVAC* sender)
+#endif
+
+#if defined(ESP32) || defined(ESP8266)
+#define HAHVAC_CALLBACK_TARGET_TEMP(name) std::function<void(HANumeric temperature, HAHVAC* sender)> name
+#else
 #define HAHVAC_CALLBACK_TARGET_TEMP(name) void (*name)(HANumeric temperature, HAHVAC* sender)
+#endif
+
+#if defined(ESP32) || defined(ESP8266)
+#define HAHVAC_CALLBACK_FAN_MODE(name) std::function<void(FanMode mode, HAHVAC* sender)> name
+#else
 #define HAHVAC_CALLBACK_FAN_MODE(name) void (*name)(FanMode mode, HAHVAC* sender)
+#endif
+
+#if defined(ESP32) || defined(ESP8266)
+#define HAHVAC_CALLBACK_SWING_MODE(name) std::function<void(SwingMode mode, HAHVAC* sender)> name
+#else
 #define HAHVAC_CALLBACK_SWING_MODE(name) void (*name)(SwingMode mode, HAHVAC* sender)
+#endif
+
+#if defined(ESP32) || defined(ESP8266)
+#define HAHVAC_CALLBACK_MODE(name) std::function<void(Mode mode, HAHVAC* sender)> name
+#else
 #define HAHVAC_CALLBACK_MODE(name) void (*name)(Mode mode, HAHVAC* sender)
+#endif
 
 class HASerializerArray;
 
