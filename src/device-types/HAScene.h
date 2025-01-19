@@ -6,9 +6,10 @@
 #ifndef EX_ARDUINOHA_SCENE
 
 #if defined(ESP32) || defined(ESP8266)
-#define HASCENE_CALLBACK(name) std::function<void(HAScene* sender)> name
+#define HASCENE_CALLBACK_STD(name) std::function<void(HAScene* sender)> name
+#define HASCENE_CALLBACK_PTR(name) void (*name)(HAScene* sender)
 #else
-#define HASCENE_CALLBACK(name) void (*name)(HAScene* sender)
+#define HASCENE_CALLBACK_PTR(name) void (*name)(HAScene* sender)
 #endif
 
 /**
@@ -44,14 +45,42 @@ public:
     inline void setRetain(const bool retain)
         { _retain = retain; }
 
+#if defined(ESP32) || defined(ESP8266)
     /**
      * Registers callback that will be called when the scene is activated in the HA panel.
      * Please note that it's not possible to register multiple callbacks for the same scene.
+     * This overload accepts a pointer to a function.
      *
      * @param callback
      */
-    inline void onCommand(HASCENE_CALLBACK(callback))
-        { _commandCallback = callback; }
+    inline void onCommand(HASCENE_CALLBACK_PTR(callback)) {
+        _commandCallback = [callback](HAScene* sender) {
+            if (callback) {
+                callback(sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called when the scene is activated in the HA panel.
+     * Please note that it's not possible to register multiple callbacks for the same scene.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     */
+    inline void onCommand(HASCENE_CALLBACK_STD(callback))
+    { _commandCallback = std::move(callback); }
+#else
+    /**
+     * Registers callback that will be called when the scene is activated in the HA panel.
+     * Please note that it's not possible to register multiple callbacks for the same scene.
+     * This version is used for platforms without std::function support.
+     *
+     * @param callback
+     */
+    inline void onCommand(HASCENE_CALLBACK_PTR(callback))
+    { _commandCallback = callback; }
+#endif
 
 protected:
     virtual void buildSerializer() override;
@@ -70,7 +99,11 @@ private:
     bool _retain;
 
     /// The command callback that will be called when scene is activated from the HA panel.
-    HASCENE_CALLBACK(_commandCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HASCENE_CALLBACK_STD(_commandCallback);
+#else
+    HASCENE_CALLBACK_PTR(_commandCallback);
+#endif
 };
 
 #endif

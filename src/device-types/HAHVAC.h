@@ -27,33 +27,23 @@
         { setCurrentTargetTemperature(HANumeric(temperature, _precision)); }
 
 #if defined(ESP32) || defined(ESP8266)
-#define HAHVAC_CALLBACK_BOOL(name) std::function<void(bool state, HAHVAC* sender)> name
+#include <functional>
+#define HAHVAC_CALLBACK_BOOL_STD(name) std::function<void(bool state, HAHVAC* sender)> name
+#define HAHVAC_CALLBACK_BOOL_PTR(name) void (*name)(bool state, HAHVAC* sender)
+#define HAHVAC_CALLBACK_TARGET_TEMP_STD(name) std::function<void(HANumeric temperature, HAHVAC* sender)> name
+#define HAHVAC_CALLBACK_TARGET_TEMP_PTR(name) void (*name)(HANumeric temperature, HAHVAC* sender)
+#define HAHVAC_CALLBACK_FAN_MODE_STD(name) std::function<void(FanMode mode, HAHVAC* sender)> name
+#define HAHVAC_CALLBACK_FAN_MODE_PTR(name) void (*name)(FanMode mode, HAHVAC* sender)
+#define HAHVAC_CALLBACK_SWING_MODE_STD(name) std::function<void(SwingMode mode, HAHVAC* sender)> name
+#define HAHVAC_CALLBACK_SWING_MODE_PTR(name) void (*name)(SwingMode mode, HAHVAC* sender)
+#define HAHVAC_CALLBACK_MODE_STD(name) std::function<void(Mode mode, HAHVAC* sender)> name
+#define HAHVAC_CALLBACK_MODE_PTR(name) void (*name)(Mode mode, HAHVAC* sender)
 #else
-#define HAHVAC_CALLBACK_BOOL(name) void (*name)(bool state, HAHVAC* sender)
-#endif
-
-#if defined(ESP32) || defined(ESP8266)
-#define HAHVAC_CALLBACK_TARGET_TEMP(name) std::function<void(HANumeric temperature, HAHVAC* sender)> name
-#else
-#define HAHVAC_CALLBACK_TARGET_TEMP(name) void (*name)(HANumeric temperature, HAHVAC* sender)
-#endif
-
-#if defined(ESP32) || defined(ESP8266)
-#define HAHVAC_CALLBACK_FAN_MODE(name) std::function<void(FanMode mode, HAHVAC* sender)> name
-#else
-#define HAHVAC_CALLBACK_FAN_MODE(name) void (*name)(FanMode mode, HAHVAC* sender)
-#endif
-
-#if defined(ESP32) || defined(ESP8266)
-#define HAHVAC_CALLBACK_SWING_MODE(name) std::function<void(SwingMode mode, HAHVAC* sender)> name
-#else
-#define HAHVAC_CALLBACK_SWING_MODE(name) void (*name)(SwingMode mode, HAHVAC* sender)
-#endif
-
-#if defined(ESP32) || defined(ESP8266)
-#define HAHVAC_CALLBACK_MODE(name) std::function<void(Mode mode, HAHVAC* sender)> name
-#else
-#define HAHVAC_CALLBACK_MODE(name) void (*name)(Mode mode, HAHVAC* sender)
+#define HAHVAC_CALLBACK_BOOL_PTR(name) void (*name)(bool state, HAHVAC* sender)
+#define HAHVAC_CALLBACK_TARGET_TEMP_PTR(name) void (*name)(HANumeric temperature, HAHVAC* sender)
+#define HAHVAC_CALLBACK_FAN_MODE_PTR(name) void (*name)(FanMode mode, HAHVAC* sender)
+#define HAHVAC_CALLBACK_SWING_MODE_PTR(name) void (*name)(SwingMode mode, HAHVAC* sender)
+#define HAHVAC_CALLBACK_MODE_PTR(name) void (*name)(Mode mode, HAHVAC* sender)
 #endif
 
 class HASerializerArray;
@@ -463,64 +453,232 @@ public:
     inline void setTempStep(const float step)
         { _tempStep = HANumeric(step, _precision); }
 
+#if defined(ESP32) || defined(ESP8266)
     /**
      * Registers callback that will be called each time the aux state command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a pointer to a function.
      *
      * @param callback
      * @note The aux state must be reported back to HA using the HAHVAC::setAuxState method.
      */
-    inline void onAuxStateCommand(HAHVAC_CALLBACK_BOOL(callback))
+    inline void onAuxStateCommand(HAHVAC_CALLBACK_BOOL_PTR(callback)) {
+      _auxCallback = [callback](bool state, HAHVAC* sender) {
+            if (callback) {
+                callback(state, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the power command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a pointer to a function.
+     *
+     * @param callback
+     */
+    inline void onPowerCommand(HAHVAC_CALLBACK_BOOL_PTR(callback)) {
+      _powerCallback = [callback](bool state, HAHVAC* sender) {
+            if (callback) {
+                callback(state, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the fan mode command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a pointer to a function.
+     *
+     * @param callback
+     * @note The fan mode must be reported back to HA using the HAHVAC::setFanMode method.
+     */
+    inline void onFanModeCommand(HAHVAC_CALLBACK_FAN_MODE_PTR(callback)) {
+      _fanModeCallback = [callback](FanMode mode, HAHVAC* sender) {
+            if (callback) {
+                callback(mode, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the swing mode command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a pointer to a function.
+     *
+     * @param callback
+     * @note The swing mode must be reported back to HA using the HAHVAC::setSwingMode method.
+     */
+    inline void onSwingModeCommand(HAHVAC_CALLBACK_SWING_MODE_PTR(callback)) {
+      _swingModeCallback = [callback](SwingMode mode, HAHVAC* sender) {
+            if (callback) {
+                callback(mode, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the HVAC mode command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a pointer to a function.
+     *
+     * @param callback
+     * @note The mode must be reported back to HA using the HAHVAC::setMode method.
+     */
+    inline void onModeCommand(HAHVAC_CALLBACK_MODE_PTR(callback)) {
+      _modeCallback = [callback](Mode mode, HAHVAC* sender) {
+            if (callback) {
+                callback(mode, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the target temperature is set via HA panel.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a pointer to a function.
+     *
+     * @param callback
+     * @note The target temperature must be reported back to HA using the HAHVAC::setTargetTemperature method.
+     */
+    inline void onTargetTemperatureCommand(HAHVAC_CALLBACK_TARGET_TEMP_PTR(callback)) {
+      _targetTemperatureCallback = [callback](HANumeric temperature, HAHVAC* sender) {
+            if (callback) {
+                callback(temperature, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the aux state command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     * @note The aux state must be reported back to HA using the HAHVAC::setAuxState method.
+     */
+    inline void onAuxStateCommand(HAHVAC_CALLBACK_BOOL_STD(callback))
+        { _auxCallback = std::move(callback); }
+
+    /**
+     * Registers callback that will be called each time the power command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     */
+    inline void onPowerCommand(HAHVAC_CALLBACK_BOOL_STD(callback))
+        { _powerCallback = std::move(callback); }
+
+    /**
+     * Registers callback that will be called each time the fan mode command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     * @note The fan mode must be reported back to HA using the HAHVAC::setFanMode method.
+     */
+    inline void onFanModeCommand(HAHVAC_CALLBACK_FAN_MODE_STD(callback))
+        { _fanModeCallback = std::move(callback); }
+
+    /**
+     * Registers callback that will be called each time the swing mode command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     * @note The swing mode must be reported back to HA using the HAHVAC::setSwingMode method.
+     */
+    inline void onSwingModeCommand(HAHVAC_CALLBACK_SWING_MODE_STD(callback))
+        { _swingModeCallback = std::move(callback); }
+
+    /**
+     * Registers callback that will be called each time the HVAC mode command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     * @note The mode must be reported back to HA using the HAHVAC::setMode method.
+     */
+    inline void onModeCommand(HAHVAC_CALLBACK_MODE_STD(callback))
+        { _modeCallback = std::move(callback); }
+
+    /**
+     * Registers callback that will be called each time the target temperature is set via HA panel.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     * @note The target temperature must be reported back to HA using the HAHVAC::setTargetTemperature method.
+     */
+    inline void onTargetTemperatureCommand(HAHVAC_CALLBACK_TARGET_TEMP_STD(callback))
+        { _targetTemperatureCallback = std::move(callback); }
+#else
+    /**
+     * Registers callback that will be called each time the aux state command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This version is used for platforms without std::function support.
+     *
+     * @param callback
+     * @note The aux state must be reported back to HA using the HAHVAC::setAuxState method.
+     */
+    inline void onAuxStateCommand(HAHVAC_CALLBACK_BOOL_PTR(callback))
         { _auxCallback = callback; }
 
     /**
      * Registers callback that will be called each time the power command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This version is used for platforms without std::function support.
      *
      * @param callback
      */
-    inline void onPowerCommand(HAHVAC_CALLBACK_BOOL(callback))
+    inline void onPowerCommand(HAHVAC_CALLBACK_BOOL_PTR(callback))
         { _powerCallback = callback; }
 
     /**
      * Registers callback that will be called each time the fan mode command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This version is used for platforms without std::function support.
      *
      * @param callback
      * @note The fan mode must be reported back to HA using the HAHVAC::setFanMode method.
      */
-    inline void onFanModeCommand(HAHVAC_CALLBACK_FAN_MODE(callback))
+    inline void onFanModeCommand(HAHVAC_CALLBACK_FAN_MODE_PTR(callback))
         { _fanModeCallback = callback; }
 
     /**
      * Registers callback that will be called each time the swing mode command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This version is used for platforms without std::function support.
      *
      * @param callback
      * @note The swing mode must be reported back to HA using the HAHVAC::setSwingMode method.
      */
-    inline void onSwingModeCommand(HAHVAC_CALLBACK_SWING_MODE(callback))
+    inline void onSwingModeCommand(HAHVAC_CALLBACK_SWING_MODE_PTR(callback))
         { _swingModeCallback = callback; }
 
     /**
      * Registers callback that will be called each time the HVAC mode command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This version is used for platforms without std::function support.
      *
      * @param callback
      * @note The mode must be reported back to HA using the HAHVAC::setMode method.
      */
-    inline void onModeCommand(HAHVAC_CALLBACK_MODE(callback))
+    inline void onModeCommand(HAHVAC_CALLBACK_MODE_PTR(callback))
         { _modeCallback = callback; }
 
     /**
      * Registers callback that will be called each time the target temperature is set via HA panel.
      * Please note that it's not possible to register multiple callbacks for the same HVAC.
+     * This version is used for platforms without std::function support.
      *
      * @param callback
      * @note The target temperature must be reported back to HA using the HAHVAC::setTargetTemperature method.
      */
-    inline void onTargetTemperatureCommand(HAHVAC_CALLBACK_TARGET_TEMP(callback))
+    inline void onTargetTemperatureCommand(HAHVAC_CALLBACK_TARGET_TEMP_PTR(callback))
         { _targetTemperatureCallback = callback; }
+#endif
 
 protected:
     virtual void buildSerializer() override;
@@ -673,13 +831,21 @@ private:
     HANumeric _tempStep;
 
     /// Callback that will be called when the aux state command is received from the HA.
-    HAHVAC_CALLBACK_BOOL(_auxCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HAHVAC_CALLBACK_BOOL_STD(_auxCallback);
+#else
+    HAHVAC_CALLBACK_BOOL_PTR(_auxCallback);
+#endif
 
     /// The state of the aux heating. By default it's `false`.
     bool _auxState;
 
     /// Callback that will be called when the power command is received from the HA.
-    HAHVAC_CALLBACK_BOOL(_powerCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HAHVAC_CALLBACK_BOOL_STD(_powerCallback);
+#else
+    HAHVAC_CALLBACK_BOOL_PTR(_powerCallback);
+#endif
 
     /// The current mode of the fan. By default it's `HAHVAC::UnknownFanMode`.
     FanMode _fanMode;
@@ -691,7 +857,11 @@ private:
     HASerializerArray* _fanModesSerializer;
 
     /// Callback that will be called when the fan mode command is received from the HA.
-    HAHVAC_CALLBACK_FAN_MODE(_fanModeCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HAHVAC_CALLBACK_FAN_MODE_STD(_fanModeCallback);
+#else
+    HAHVAC_CALLBACK_FAN_MODE_PTR(_fanModeCallback);
+#endif
 
     /// The current swing mode. By default it's `HAHVAC::UnknownSwingMode`.
     SwingMode _swingMode;
@@ -703,7 +873,11 @@ private:
     HASerializerArray* _swingModesSerializer;
 
     /// Callback that will be called when the swing mode command is received from the HA.
-    HAHVAC_CALLBACK_SWING_MODE(_swingModeCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HAHVAC_CALLBACK_SWING_MODE_STD(_swingModeCallback);
+#else
+    HAHVAC_CALLBACK_SWING_MODE_PTR(_swingModeCallback);
+#endif
 
     /// The current mode. By default it's `HAHVAC::UnknownMode`.
     Mode _mode;
@@ -715,13 +889,21 @@ private:
     HASerializerArray* _modesSerializer;
 
     /// Callback that will be called when the mode command is received from the HA.
-    HAHVAC_CALLBACK_MODE(_modeCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HAHVAC_CALLBACK_MODE_STD(_modeCallback);
+#else
+    HAHVAC_CALLBACK_MODE_PTR(_modeCallback);
+#endif
 
     /// The target temperature of the HVAC. By default it's not set.
     HANumeric _targetTemperature;
 
     /// Callback that will be called when the target temperature is changed via the HA panel.
-    HAHVAC_CALLBACK_TARGET_TEMP(_targetTemperatureCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HAHVAC_CALLBACK_TARGET_TEMP_STD(_targetTemperatureCallback);
+#else
+    HAHVAC_CALLBACK_TARGET_TEMP_PTR(_targetTemperatureCallback);
+#endif
 };
 
 #endif

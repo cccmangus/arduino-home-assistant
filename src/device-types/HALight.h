@@ -7,27 +7,20 @@
 #ifndef EX_ARDUINOHA_LIGHT
 
 #if defined(ESP32) || defined(ESP8266)
-#define HALIGHT_STATE_CALLBACK(name) std::function<void(bool state, HALight* sender)> name
+#include <functional>
+#define HALIGHT_STATE_CALLBACK_STD(name) std::function<void(bool state, HALight* sender)> name
+#define HALIGHT_STATE_CALLBACK_PTR(name) void (*name)(bool state, HALight* sender)
+#define HALIGHT_BRIGHTNESS_CALLBACK_STD(name) std::function<void(uint8_t brightness, HALight* sender)> name
+#define HALIGHT_BRIGHTNESS_CALLBACK_PTR(name) void (*name)(uint8_t brightness, HALight* sender)
+#define HALIGHT_COLOR_TEMP_CALLBACK_STD(name) std::function<void(uint16_t temperature, HALight* sender)> name
+#define HALIGHT_COLOR_TEMP_CALLBACK_PTR(name) void (*name)(uint16_t temperature, HALight* sender)
+#define HALIGHT_RGB_COLOR_CALLBACK_STD(name) std::function<void(HALight::RGBColor color, HALight* sender)> name
+#define HALIGHT_RGB_COLOR_CALLBACK_PTR(name) void (*name)(HALight::RGBColor color, HALight* sender)
 #else
-#define HALIGHT_STATE_CALLBACK(name) void (*name)(bool state, HALight* sender)
-#endif
-
-#if defined(ESP32) || defined(ESP8266)
-#define HALIGHT_BRIGHTNESS_CALLBACK(name) std::function<void(uint8_t brightness, HALight* sender)> name
-#else
-#define HALIGHT_BRIGHTNESS_CALLBACK(name) void (*name)(uint8_t brightness, HALight* sender)
-#endif
-
-#if defined(ESP32) || defined(ESP8266)
-#define HALIGHT_COLOR_TEMP_CALLBACK(name) std::function<void(uint16_t temperature, HALight* sender)> name
-#else
-#define HALIGHT_COLOR_TEMP_CALLBACK(name) void (*name)(uint16_t temperature, HALight* sender)
-#endif
-
-#if defined(ESP32) || defined(ESP8266)
-#define HALIGHT_RGB_COLOR_CALLBACK(name) std::function<void(HALight::RGBColor color, HALight* sender)> name
-#else
-#define HALIGHT_RGB_COLOR_CALLBACK(name) void (*name)(HALight::RGBColor color, HALight* sender)
+#define HALIGHT_STATE_CALLBACK_PTR(name) void (*name)(bool state, HALight* sender)
+#define HALIGHT_BRIGHTNESS_CALLBACK_PTR(name) void (*name)(uint8_t brightness, HALight* sender)
+#define HALIGHT_COLOR_TEMP_CALLBACK_PTR(name) void (*name)(uint16_t temperature, HALight* sender)
+#define HALIGHT_RGB_COLOR_CALLBACK_PTR(name) void (*name)(HALight::RGBColor color, HALight* sender)
 #endif
 
 /**
@@ -276,45 +269,159 @@ public:
     inline void setMaxMireds(const uint16_t mireds)
         { _maxMireds.setBaseValue(mireds); }
 
+#if defined(ESP32) || defined(ESP8266)
     /**
      * Registers callback that will be called each time the state command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same light.
+     * This overload accepts a pointer to a function.
      *
      * @param callback
      * @note In non-optimistic mode, the state must be reported back to HA using the HALight::setState method.
      */
-    inline void onStateCommand(HALIGHT_STATE_CALLBACK(callback))
+    inline void onStateCommand(HALIGHT_STATE_CALLBACK_PTR(callback)) {
+      _stateCallback = [callback](bool state, HALight* sender) {
+            if (callback) {
+                callback(state, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the brightness command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same light.
+     * This overload accepts a pointer to a function.
+     *
+     * @param callback
+     * @note In non-optimistic mode, the brightness must be reported back to HA using the HALight::setBrightness method.
+     */
+    inline void onBrightnessCommand(HALIGHT_BRIGHTNESS_CALLBACK_PTR(callback)) {
+      _brightnessCallback = [callback](uint8_t brightness, HALight* sender) {
+            if (callback) {
+                callback(brightness, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the color temperature command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same light.
+     * This overload accepts a pointer to a function.
+     *
+     * @param callback
+     * @note In non-optimistic mode, the color temperature must be reported back to HA using the HALight::setColorTemperature method.
+     */
+    inline void onColorTemperatureCommand(HALIGHT_COLOR_TEMP_CALLBACK_PTR(callback)) {
+      _colorTemperatureCallback = [callback](uint16_t temperature, HALight* sender) {
+            if (callback) {
+                callback(temperature, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the RGB color command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same light.
+     * This overload accepts a pointer to a function.
+     *
+     * @param callback
+     * @note In non-optimistic mode, the color must be reported back to HA using the HALight::setRGBColor method.
+     */
+    inline void onRGBColorCommand(HALIGHT_RGB_COLOR_CALLBACK_PTR(callback)) {
+      _rgbColorCallback = [callback](HALight::RGBColor color, HALight* sender) {
+            if (callback) {
+                callback(color, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the state command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same light.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     * @note In non-optimistic mode, the state must be reported back to HA using the HALight::setState method.
+     */
+    inline void onStateCommand(HALIGHT_STATE_CALLBACK_STD(callback))
+        { _stateCallback = std::move(callback); }
+
+    /**
+     * Registers callback that will be called each time the brightness command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same light.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     * @note In non-optimistic mode, the brightness must be reported back to HA using the HALight::setBrightness method.
+     */
+    inline void onBrightnessCommand(HALIGHT_BRIGHTNESS_CALLBACK_STD(callback))
+        { _brightnessCallback = std::move(callback); }
+
+    /**
+     * Registers callback that will be called each time the color temperature command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same light.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     * @note In non-optimistic mode, the color temperature must be reported back to HA using the HALight::setColorTemperature method.
+     */
+    inline void onColorTemperatureCommand(HALIGHT_COLOR_TEMP_CALLBACK_STD(callback))
+        { _colorTemperatureCallback = std::move(callback); }
+
+    /**
+     * Registers callback that will be called each time the RGB color command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same light.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     * @note In non-optimistic mode, the color must be reported back to HA using the HALight::setRGBColor method.
+     */
+    inline void onRGBColorCommand(HALIGHT_RGB_COLOR_CALLBACK_STD(callback))
+        { _rgbColorCallback = std::move(callback); }
+#else
+    /**
+     * Registers callback that will be called each time the state command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same light.
+     * This version is used for platforms without std::function support.
+     *
+     * @param callback
+     * @note In non-optimistic mode, the state must be reported back to HA using the HALight::setState method.
+     */
+    inline void onStateCommand(HALIGHT_STATE_CALLBACK_PTR(callback))
         { _stateCallback = callback; }
 
     /**
      * Registers callback that will be called each time the brightness command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same light.
+     * This version is used for platforms without std::function support.
      *
      * @param callback
      * @note In non-optimistic mode, the brightness must be reported back to HA using the HALight::setBrightness method.
      */
-    inline void onBrightnessCommand(HALIGHT_BRIGHTNESS_CALLBACK(callback))
+    inline void onBrightnessCommand(HALIGHT_BRIGHTNESS_CALLBACK_PTR(callback))
         { _brightnessCallback = callback; }
 
     /**
      * Registers callback that will be called each time the color temperature command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same light.
+     * This version is used for platforms without std::function support.
      *
      * @param callback
      * @note In non-optimistic mode, the color temperature must be reported back to HA using the HALight::setColorTemperature method.
      */
-    inline void onColorTemperatureCommand(HALIGHT_COLOR_TEMP_CALLBACK(callback))
+    inline void onColorTemperatureCommand(HALIGHT_COLOR_TEMP_CALLBACK_PTR(callback))
         { _colorTemperatureCallback = callback; }
 
     /**
      * Registers callback that will be called each time the RGB color command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same light.
+     * This version is used for platforms without std::function support.
      *
      * @param callback
      * @note In non-optimistic mode, the color must be reported back to HA using the HALight::setRGBColor method.
      */
-    inline void onRGBColorCommand(HALIGHT_RGB_COLOR_CALLBACK(callback))
+    inline void onRGBColorCommand(HALIGHT_RGB_COLOR_CALLBACK_PTR(callback))
         { _rgbColorCallback = callback; }
+#endif
 
 protected:
     virtual void buildSerializer() override;
@@ -424,16 +531,32 @@ private:
     RGBColor _currentRGBColor;
 
     /// The callback that will be called when the state command is received from the HA.
-    HALIGHT_STATE_CALLBACK(_stateCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HALIGHT_STATE_CALLBACK_STD(_stateCallback);
+#else
+    HALIGHT_STATE_CALLBACK_PTR(_stateCallback);
+#endif
 
     /// The callback that will be called when the brightness command is received from the HA.
-    HALIGHT_BRIGHTNESS_CALLBACK(_brightnessCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HALIGHT_BRIGHTNESS_CALLBACK_STD(_brightnessCallback);
+#else
+    HALIGHT_BRIGHTNESS_CALLBACK_PTR(_brightnessCallback);
+#endif
 
     /// The callback that will be called when the color temperature command is received from the HA.
-    HALIGHT_COLOR_TEMP_CALLBACK(_colorTemperatureCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HALIGHT_COLOR_TEMP_CALLBACK_STD(_colorTemperatureCallback);
+#else
+    HALIGHT_COLOR_TEMP_CALLBACK_PTR(_colorTemperatureCallback);
+#endif
 
     /// The callback that will be called when the RGB command is received from the HA.
-    HALIGHT_RGB_COLOR_CALLBACK(_rgbColorCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HALIGHT_RGB_COLOR_CALLBACK_STD(_rgbColorCallback);
+#else
+    HALIGHT_RGB_COLOR_CALLBACK_PTR(_rgbColorCallback);
+#endif
 };
 
 #endif
