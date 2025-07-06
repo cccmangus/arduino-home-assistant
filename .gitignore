@@ -18,3 +18,4 @@ docsrc/build
 *.so.*
 *.dll
 *.dylib
+*.out
