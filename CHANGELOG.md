@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.0
+
+* Added support for std::function in all callbacks [#281](https://github.com/dawidchyrzynski/arduino-home-assistant/pull/281)
+
 ## 2.1.0
 
 **New features:**
