@@ -6,15 +6,12 @@
 
 #ifndef EX_ARDUINOHA_FAN
 
-#if defined(ESP32) || defined(ESP8266)
-#include <functional>
-#define HAFAN_STATE_CALLBACK_STD(name) std::function<void(bool state, HAFan* sender)> name
-#define HAFAN_STATE_CALLBACK_PTR(name) void (*name)(bool state, HAFan* sender)
-#define HAFAN_SPEED_CALLBACK_STD(name) std::function<void(uint16_t speed, HAFan* sender)> name
-#define HAFAN_SPEED_CALLBACK_PTR(name) void (*name)(uint16_t speed, HAFan* sender)
+#if defined(ARDUINOHA_USE_STD_FUNCTION)
+    #define HAFAN_STATE_CALLBACK(name) std::function<void(bool state, HAFan* sender)> name
+    #define HAFAN_SPEED_CALLBACK(name) std::function<void(uint16_t speed, HAFan* sender)> name
 #else
-#define HAFAN_STATE_CALLBACK_PTR(name) void (*name)(bool state, HAFan* sender)
-#define HAFAN_SPEED_CALLBACK_PTR(name) void (*name)(uint16_t speed, HAFan* sender)
+    #define HAFAN_STATE_CALLBACK(name) void (*name)(bool state, HAFan* sender)
+    #define HAFAN_SPEED_CALLBACK(name) void (*name)(uint16_t speed, HAFan* sender)
 #endif
 
 /**
@@ -156,61 +153,6 @@ public:
     inline void setSpeedRangeMin(const uint16_t min)
         { _speedRangeMin.setBaseValue(min); }
 
-#if defined(ESP32) || defined(ESP8266)
-    /**
-     * Registers callback that will be called each time the state command from HA is received.
-     * Please note that it's not possible to register multiple callbacks for the same fan.
-     * This overload accepts a pointer to a function.
-     *
-     * @param callback
-     * @note In non-optimistic mode, the state must be reported back to HA using the HAFan::setState method.
-     */
-    inline void onStateCommand(HAFAN_STATE_CALLBACK_PTR(callback)) {
-        _stateCallback = [callback](bool state, HAFan* sender) {
-            if (callback) {
-                callback(state, sender);
-            }
-        };
-    }
-
-    /**
-     * Registers callback that will be called each time the speed command from HA is received.
-     * Please note that it's not possible to register multiple callbacks for the same fan.
-     * This overload accepts a pointer to a function.
-     *
-     * @param callback
-     * @note In non-optimistic mode, the speed must be reported back to HA using the HAFan::setSpeed method.
-     */
-    inline void onSpeedCommand(HAFAN_SPEED_CALLBACK_PTR(callback)) {
-        _speedCallback = [callback](uint16_t speed, HAFan* sender) {
-            if (callback) {
-                callback(speed, sender);
-            }
-        };
-    }
-
-    /**
-     * Registers callback that will be called each time the state command from HA is received.
-     * Please note that it's not possible to register multiple callbacks for the same fan.
-     * This overload accepts a std::function.
-     *
-     * @param callback
-     * @note In non-optimistic mode, the state must be reported back to HA using the HAFan::setState method.
-     */
-    inline void onStateCommand(HAFAN_STATE_CALLBACK_STD(callback))
-        { _stateCallback = std::move(callback); }
-
-    /**
-     * Registers callback that will be called each time the speed command from HA is received.
-     * Please note that it's not possible to register multiple callbacks for the same fan.
-     * This overload accepts a std::function.
-     *
-     * @param callback
-     * @note In non-optimistic mode, the speed must be reported back to HA using the HAFan::setSpeed method.
-     */
-    inline void onSpeedCommand(HAFAN_SPEED_CALLBACK_STD(callback))
-        { _speedCallback = std::move(callback); }
-#else
     /**
      * Registers callback that will be called each time the state command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same fan.
@@ -218,7 +160,7 @@ public:
      * @param callback
      * @note In non-optimistic mode, the state must be reported back to HA using the HAFan::setState method.
      */
-    inline void onStateCommand(HAFAN_STATE_CALLBACK_PTR(callback))
+    inline void onStateCommand(HAFAN_STATE_CALLBACK(callback))
         { _stateCallback = callback; }
 
     /**
@@ -228,9 +170,8 @@ public:
      * @param callback
      * @note In non-optimistic mode, the speed must be reported back to HA using the HAFan::setSpeed method.
      */
-    inline void onSpeedCommand(HAFAN_SPEED_CALLBACK_PTR(callback))
+    inline void onSpeedCommand(HAFAN_SPEED_CALLBACK(callback))
         { _speedCallback = callback; }
-#endif
 
 protected:
     virtual void buildSerializer() override;
@@ -299,18 +240,10 @@ private:
     uint16_t _currentSpeed;
 
     /// The callback that will be called when the state command is received from the HA.
-#if defined(ESP32) || defined(ESP8266)
-    HAFAN_STATE_CALLBACK_STD(_stateCallback);
-#else
-    HAFAN_STATE_CALLBACK_PTR(_stateCallback);
-#endif
+    HAFAN_STATE_CALLBACK(_stateCallback);
 
     /// The callback that will be called when the speed command is received from the HA.
-#if defined(ESP32) || defined(ESP8266)
-    HAFAN_SPEED_CALLBACK_STD(_speedCallback);
-#else
-    HAFAN_SPEED_CALLBACK_PTR(_speedCallback);
-#endif
+    HAFAN_SPEED_CALLBACK(_speedCallback);
 };
 
 #endif

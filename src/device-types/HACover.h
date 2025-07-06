@@ -5,12 +5,10 @@
 
 #ifndef EX_ARDUINOHA_COVER
 
-#if defined(ESP32) || defined(ESP8266)
-#include <functional>
-#define HACOVER_CALLBACK_STD(name) std::function<void(CoverCommand cmd, HACover* sender)> name
-#define HACOVER_CALLBACK_PTR(name) void (*name)(CoverCommand cmd, HACover* sender)
+#if defined(ARDUINOHA_USE_STD_FUNCTION)
+    #define HACOVER_CALLBACK(name) std::function<void(CoverCommand cmd, HACover* sender)> name
 #else
-#define HACOVER_CALLBACK_PTR(name) void (*name)(CoverCommand cmd, HACover* sender)
+    #define HACOVER_CALLBACK(name) void (*name)(CoverCommand cmd, HACover* sender)
 #endif
 
 /**
@@ -144,40 +142,14 @@ public:
     inline void setOptimistic(const bool optimistic)
         { _optimistic = optimistic; }
 
-#if defined(ESP32) || defined(ESP8266)
     /**
      * Registers callback that will be called each time the command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same cover.
      *
      * @param callback Pointer to a function.
      */
-    void onCommand(HACOVER_CALLBACK_PTR(callback)) {
-        _commandCallback = [callback](CoverCommand cmd, HACover* sender) {
-            if (callback) {
-                callback(cmd, sender);
-            }
-        };
-    }
-
-    /**
-     * Registers callback that will be called each time the command from HA is received.
-     * Please note that it's not possible to register multiple callbacks for the same cover.
-     *
-     * @param callback std::function.
-     */
-    void onCommand(HACOVER_CALLBACK_STD(callback)) {
-        _commandCallback = std::move(callback);
-    }
-#else
-    /**
-     * Registers callback that will be called each time the command from HA is received.
-     * Please note that it's not possible to register multiple callbacks for the same cover.
-     *
-     * @param callback Pointer to a function.
-     */
-    inline void onCommand(HACOVER_CALLBACK_PTR(callback))
+    inline void onCommand(HACOVER_CALLBACK(callback))
         { _commandCallback = callback; }
-#endif
 
 protected:
     virtual void buildSerializer() override;
@@ -235,11 +207,7 @@ private:
     bool _optimistic;
 
     /// The command callback that will be called when clicking the cover's button in the HA panel.
-#if defined(ESP32) || defined(ESP8266)
-    HACOVER_CALLBACK_STD(_commandCallback);
-#else
-    HACOVER_CALLBACK_PTR(_commandCallback);
-#endif
+    HACOVER_CALLBACK(_commandCallback);
 };
 
 #endif

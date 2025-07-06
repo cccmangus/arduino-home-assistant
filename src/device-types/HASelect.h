@@ -7,11 +7,10 @@
 
 class HASerializerArray;
 
-#if defined(ESP32) || defined(ESP8266)
-#define HASELECT_CALLBACK_STD(name) std::function<void(int8_t index, HASelect* sender)> name
-#define HASELECT_CALLBACK_PTR(name) void (*name)(int8_t index, HASelect* sender)
+#if defined(ARDUINOHA_USE_STD_FUNCTION)
+    #define HASELECT_CALLBACK(name) std::function<void(int8_t index, HASelect* sender)> name
 #else
-#define HASELECT_CALLBACK_PTR(name) void (*name)(int8_t index, HASelect* sender)
+    #define HASELECT_CALLBACK(name) void (*name)(int8_t index, HASelect* sender)
 #endif
 
 /**
@@ -106,34 +105,6 @@ public:
     inline void setOptimistic(const bool optimistic)
         { _optimistic = optimistic; }
 
-#if defined(ESP32) || defined(ESP8266)
-    /**
-     * Registers callback that will be called each time the option is changed from the HA panel.
-     * Please note that it's not possible to register multiple callbacks for the same select.
-     * This overload accepts a pointer to a function.
-     *
-     * @param callback
-     * @note In non-optimistic mode, the selected option must be reported back to HA using the HASelect::setState method.
-     */
-    inline void onCommand(HASELECT_CALLBACK_PTR(callback)) {
-      _commandCallback = [callback](int8_t index, HASelect* sender) {
-            if (callback) {
-                callback(index, sender);
-            }
-        };
-    }
-
-    /**
-     * Registers callback that will be called each time the option is changed from the HA panel.
-     * Please note that it's not possible to register multiple callbacks for the same select.
-     * This overload accepts a std::function.
-     *
-     * @param callback
-     * @note In non-optimistic mode, the selected option must be reported back to HA using the HASelect::setState method.
-     */
-    inline void onCommand(HASELECT_CALLBACK_STD(callback))
-        { _commandCallback = std::move(callback); }
-#else
     /**
      * Registers callback that will be called each time the option is changed from the HA panel.
      * Please note that it's not possible to register multiple callbacks for the same select.
@@ -142,9 +113,8 @@ public:
      * @param callback
      * @note In non-optimistic mode, the selected option must be reported back to HA using the HASelect::setState method.
      */
-    inline void onCommand(HASELECT_CALLBACK_PTR(callback))
+    inline void onCommand(HASELECT_CALLBACK(callback))
         { _commandCallback = callback; }
-#endif
 
 #ifdef ARDUINOHA_TEST
     inline HASerializerArray* getOptions() const
@@ -190,11 +160,7 @@ private:
     bool _optimistic;
 
     /// The command callback that will be called when option is changed via the HA panel.
-#if defined(ESP32) || defined(ESP8266)
-    HASELECT_CALLBACK_STD(_commandCallback);
-#else
-    HASELECT_CALLBACK_PTR(_commandCallback);
-#endif
+    HASELECT_CALLBACK(_commandCallback);
 };
 
 #endif

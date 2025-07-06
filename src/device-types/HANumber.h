@@ -16,11 +16,10 @@
     inline void setCurrentState(const type state) \
         { setCurrentState(HANumeric(state, _precision)); }
 
-#if defined(ESP32) || defined(ESP8266)
-#define HANUMBER_CALLBACK_STD(name) std::function<void(HANumeric number, HANumber* sender)> name
-#define HANUMBER_CALLBACK_PTR(name) void (*name)(HANumeric number, HANumber* sender)
+#if defined(ARDUINOHA_USE_STD_FUNCTION)
+    #define HANUMBER_CALLBACK(name) std::function<void(HANumeric number, HANumber* sender)> name
 #else
-#define HANUMBER_CALLBACK_PTR(name) void (*name)(HANumeric number, HANumber* sender)
+    #define HANUMBER_CALLBACK(name) void (*name)(HANumeric number, HANumber* sender)
 #endif
 
 /**
@@ -181,34 +180,6 @@ public:
     inline void setStep(const float step)
         { _step = HANumeric(step, _precision); }
 
-#if defined(ESP32) || defined(ESP8266)
-    /**
-     * Registers callback that will be called each time the number is changed in the HA panel.
-     * Please note that it's not possible to register multiple callbacks for the same number.
-     * This overload accepts a pointer to a function.
-     *
-     * @param callback
-     * @note In non-optimistic mode, the number must be reported back to HA using the HANumber::setState method.
-     */
-    inline void onCommand(HANUMBER_CALLBACK_PTR(callback)) {
-      _commandCallback = [callback](HANumeric number, HANumber* sender) {
-            if (callback) {
-                callback(number, sender);
-            }
-        };
-    }
-
-    /**
-     * Registers callback that will be called each time the number is changed in the HA panel.
-     * Please note that it's not possible to register multiple callbacks for the same number.
-     * This overload accepts a std::function.
-     *
-     * @param callback
-     * @note In non-optimistic mode, the number must be reported back to HA using the HANumber::setState method.
-     */
-    inline void onCommand(HANUMBER_CALLBACK_STD(callback))
-        { _commandCallback = std::move(callback); }
-#else
     /**
      * Registers callback that will be called each time the number is changed in the HA panel.
      * Please note that it's not possible to register multiple callbacks for the same number.
@@ -217,9 +188,8 @@ public:
      * @param callback
      * @note In non-optimistic mode, the number must be reported back to HA using the HANumber::setState method.
      */
-    inline void onCommand(HANUMBER_CALLBACK_PTR(callback))
+    inline void onCommand(HANUMBER_CALLBACK(callback))
         { _commandCallback = callback; }
-#endif
 
 protected:
     virtual void buildSerializer() override;
@@ -291,11 +261,7 @@ private:
     HANumeric _currentState;
 
     /// The callback that will be called when the command is received from the HA.
-#if defined(ESP32) || defined(ESP8266)
-    HANUMBER_CALLBACK_STD(_commandCallback);
-#else
-    HANUMBER_CALLBACK_PTR(_commandCallback);
-#endif
+    HANUMBER_CALLBACK(_commandCallback);
 };
 
 #endif

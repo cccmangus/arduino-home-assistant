@@ -5,12 +5,10 @@
 
 #ifndef EX_ARDUINOHA_BUTTON
 
-#if defined(ESP32) || defined(ESP8266)
-#include <functional>
-#define HABUTTON_CALLBACK_STD(name) std::function<void(HAButton* sender)> name
-#define HABUTTON_CALLBACK_PTR(name) void (*name)(HAButton* sender)
+#if defined(ARDUINOHA_USE_STD_FUNCTION)
+    #define HABUTTON_CALLBACK(name) std::function<void(HAButton* sender)> name
 #else
-#define HABUTTON_CALLBACK_PTR(name) void (*name)(HAButton* sender)
+    #define HABUTTON_CALLBACK(name) void (*name)(HAButton* sender)
 #endif
 
 /**
@@ -56,40 +54,14 @@ public:
     inline void setRetain(const bool retain)
         { _retain = retain; }
 
-#if defined(ESP32) || defined(ESP8266)
-    /**
-     * Registers a callback that will be called each time the press command from HA is received.
-     * This overload accepts a pointer to a function.
-     *
-     * @param callback Pointer to a function.
-     */
-    void onCommand(HABUTTON_CALLBACK_PTR(callback)) {
-        _commandCallback = [callback](HAButton* sender) {
-            if (callback) {
-                callback(sender);
-            }
-        };
-    }
-
-    /**
-     * Registers a callback that will be called each time the press command from HA is received.
-     * This overload accepts a std::function.
-     *
-     * @param callback std::function.
-     */
-    void onCommand(HABUTTON_CALLBACK_STD(callback)) {
-        _commandCallback = std::move(callback);
-    }
-#else
     /**
      * Registers a callback that will be called each time the press command from HA is received.
      * This version is used for platforms without std::function support.
      *
      * @param callback Pointer to a function.
      */
-    inline void onCommand(HABUTTON_CALLBACK_PTR(callback))
+    inline void onCommand(HABUTTON_CALLBACK(callback))
         { _commandCallback = callback; }
-#endif
 
 protected:
     virtual void buildSerializer() override;
@@ -111,11 +83,7 @@ private:
     bool _retain;
 
     /// The command callback that will be called once clicking the button in HA panel.
-#if defined(ESP32) || defined(ESP8266)
-    HABUTTON_CALLBACK_STD(_commandCallback);
-#else
-    HABUTTON_CALLBACK_PTR(_commandCallback);
-#endif
+    HABUTTON_CALLBACK(_commandCallback);
 };
 
 #endif
