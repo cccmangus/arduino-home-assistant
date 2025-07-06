@@ -5,7 +5,12 @@
 
 #ifndef EX_ARDUINOHA_LOCK
 
-#define HALOCK_CALLBACK(name) void (*name)(LockCommand command, HALock* sender)
+#if defined(ESP32) || defined(ESP8266)
+#define HALOCK_CALLBACK_STD(name) std::function<void(LockCommand command, HALock* sender)> name
+#define HALOCK_CALLBACK_PTR(name) void (*name)(LockCommand command, HALock* sender)
+#else
+#define HALOCK_CALLBACK_PTR(name) void (*name)(LockCommand command, HALock* sender)
+#endif
 
 /**
  * HALock allows to implement a custom lock (for example: door lock)
@@ -93,14 +98,42 @@ public:
     inline void setOptimistic(const bool optimistic)
         { _optimistic = optimistic; }
 
+#if defined(ESP32) || defined(ESP8266)
     /**
      * Registers callback that will be called each time the lock/unlock/open command from the HA is received.
      * Please note that it's not possible to register multiple callbacks for the same lock.
+     * This overload accepts a pointer to a function.
      *
      * @param callback
      */
-    inline void onCommand(HALOCK_CALLBACK(callback))
+    inline void onCommand(HALOCK_CALLBACK_PTR(callback)) {
+      _commandCallback = [callback](LockCommand command, HALock* sender) {
+            if (callback) {
+                callback(command, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the lock/unlock/open command from the HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same lock.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     */
+    inline void onCommand(HALOCK_CALLBACK_STD(callback))
+        { _commandCallback = std::move(callback); }
+#else
+    /**
+     * Registers callback that will be called each time the lock/unlock/open command from the HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same lock.
+     * This version is used for platforms without std::function support.
+     *
+     * @param callback
+     */
+    inline void onCommand(HALOCK_CALLBACK_PTR(callback))
         { _commandCallback = callback; }
+#endif
 
 protected:
     virtual void buildSerializer() override;
@@ -141,7 +174,11 @@ private:
     LockState _currentState;
 
     /// The callback that will be called when lock/unlock/open command is received from the HA.
-    HALOCK_CALLBACK(_commandCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HALOCK_CALLBACK_STD(_commandCallback);
+#else
+    HALOCK_CALLBACK_PTR(_commandCallback);
+#endif
 };
 
 #endif

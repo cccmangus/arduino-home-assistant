@@ -5,7 +5,14 @@
 
 #ifndef EX_ARDUINOHA_SWITCH
 
-#define HASWITCH_CALLBACK(name) void (*name)(bool state, HASwitch* sender)
+
+#if defined(ESP32) || defined(ESP8266)
+#define HASWITCH_CALLBACK_STD(name) std::function<void(bool state, HASwitch* sender)> name
+#define HASWITCH_CALLBACK_PTR(name) void (*name)(bool state, HASwitch* sender)
+#else
+#define HASWITCH_CALLBACK_PTR(name) void (*name)(bool state, HASwitch* sender)
+#endif
+
 
 /**
  * HASwitch allows to display on/off switch in the HA panel and receive commands on your device.
@@ -99,15 +106,45 @@ public:
     inline void setOptimistic(const bool optimistic)
         { _optimistic = optimistic; }
 
+#if defined(ESP32) || defined(ESP8266)
     /**
      * Registers callback that will be called each time the on/off command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same switch.
+     * This overload accepts a pointer to a function.
      *
      * @param callback
      * @note In non-optimistic mode, the state must be reported back to HA using the HASwitch::setState method.
      */
-    inline void onCommand(HASWITCH_CALLBACK(callback))
+    inline void onCommand(HASWITCH_CALLBACK_PTR(callback)) {
+      _commandCallback = [callback](bool state, HASwitch* sender) {
+            if (callback) {
+                callback(state, sender);
+            }
+        };
+    }
+
+    /**
+     * Registers callback that will be called each time the on/off command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same switch.
+     * This overload accepts a std::function.
+     *
+     * @param callback
+     * @note In non-optimistic mode, the state must be reported back to HA using the HASwitch::setState method.
+     */
+    inline void onCommand(HASWITCH_CALLBACK_STD(callback))
+        { _commandCallback = std::move(callback); }
+#else
+    /**
+     * Registers callback that will be called each time the on/off command from HA is received.
+     * Please note that it's not possible to register multiple callbacks for the same switch.
+     * This version is used for platforms without std::function support.
+     *
+     * @param callback
+     * @note In non-optimistic mode, the state must be reported back to HA using the HASwitch::setState method.
+     */
+    inline void onCommand(HASWITCH_CALLBACK_PTR(callback))
         { _commandCallback = callback; }
+#endif
 
 protected:
     virtual void buildSerializer() override;
@@ -143,7 +180,11 @@ private:
     bool _currentState;
 
     /// The callback that will be called when switch command is received from the HA.
-    HASWITCH_CALLBACK(_commandCallback);
+#if defined(ESP32) || defined(ESP8266)
+    HASWITCH_CALLBACK_STD(_commandCallback);
+#else
+    HASWITCH_CALLBACK_PTR(_commandCallback);
+#endif
 };
 
 #endif
