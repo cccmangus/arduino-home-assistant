@@ -267,9 +267,8 @@ public:
     /**
      * Registers callback that will be called each time the state command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same light.
-     * This version is used for platforms without std::function support.
      *
-     * @param callback
+     * @param callback Pointer to a function or std::bind or lambda function.
      * @note In non-optimistic mode, the state must be reported back to HA using the HALight::setState method.
      */
     inline void onStateCommand(HALIGHT_STATE_CALLBACK(callback))
@@ -278,9 +277,8 @@ public:
     /**
      * Registers callback that will be called each time the brightness command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same light.
-     * This version is used for platforms without std::function support.
      *
-     * @param callback
+     * @param callback Pointer to a function or std::bind or lambda function.
      * @note In non-optimistic mode, the brightness must be reported back to HA using the HALight::setBrightness method.
      */
     inline void onBrightnessCommand(HALIGHT_BRIGHTNESS_CALLBACK(callback))
@@ -289,9 +287,8 @@ public:
     /**
      * Registers callback that will be called each time the color temperature command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same light.
-     * This version is used for platforms without std::function support.
      *
-     * @param callback
+     * @param callback Pointer to a function or std::bind or lambda function.
      * @note In non-optimistic mode, the color temperature must be reported back to HA using the HALight::setColorTemperature method.
      */
     inline void onColorTemperatureCommand(HALIGHT_COLOR_TEMP_CALLBACK(callback))
@@ -300,9 +297,8 @@ public:
     /**
      * Registers callback that will be called each time the RGB color command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same light.
-     * This version is used for platforms without std::function support.
      *
-     * @param callback
+     * @param callback Pointer to a function or std::bind or lambda function.
      * @note In non-optimistic mode, the color must be reported back to HA using the HALight::setRGBColor method.
      */
     inline void onRGBColorCommand(HALIGHT_RGB_COLOR_CALLBACK(callback))

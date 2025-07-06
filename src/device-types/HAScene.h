@@ -47,9 +47,8 @@ public:
     /**
      * Registers callback that will be called when the scene is activated in the HA panel.
      * Please note that it's not possible to register multiple callbacks for the same scene.
-     * This version is used for platforms without std::function support.
      *
-     * @param callback
+     * @param callback Pointer to a function or std::bind or lambda function.
      */
     inline void onCommand(HASCENE_CALLBACK(callback))
         { _commandCallback = callback; }

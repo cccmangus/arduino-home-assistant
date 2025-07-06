@@ -146,7 +146,7 @@ public:
      * Registers callback that will be called each time the command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same cover.
      *
-     * @param callback Pointer to a function.
+     * @param callback Pointer to a function or std::bind or lambda function.
      */
     inline void onCommand(HACOVER_CALLBACK(callback))
         { _commandCallback = callback; }

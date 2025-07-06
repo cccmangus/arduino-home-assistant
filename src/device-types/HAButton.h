@@ -56,9 +56,9 @@ public:
 
     /**
      * Registers a callback that will be called each time the press command from HA is received.
-     * This version is used for platforms without std::function support.
+     * Please note that it's not possible to register multiple callbacks for the same button.
      *
-     * @param callback Pointer to a function.
+     * @param callback Pointer to a function or std::bind or lambda function.
      */
     inline void onCommand(HABUTTON_CALLBACK(callback))
         { _commandCallback = callback; }

@@ -106,9 +106,8 @@ public:
     /**
      * Registers callback that will be called each time the on/off command from HA is received.
      * Please note that it's not possible to register multiple callbacks for the same switch.
-     * This version is used for platforms without std::function support.
      *
-     * @param callback
+     * @param callback Pointer to a function or std::bind or lambda function.
      * @note In non-optimistic mode, the state must be reported back to HA using the HASwitch::setState method.
      */
     inline void onCommand(HASWITCH_CALLBACK(callback))

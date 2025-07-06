@@ -108,9 +108,8 @@ public:
     /**
      * Registers callback that will be called each time the option is changed from the HA panel.
      * Please note that it's not possible to register multiple callbacks for the same select.
-     * This version is used for platforms without std::function support.
      *
-     * @param callback
+     * @param callback Pointer to a function or std::bind or lambda function.
      * @note In non-optimistic mode, the selected option must be reported back to HA using the HASelect::setState method.
      */
     inline void onCommand(HASELECT_CALLBACK(callback))
