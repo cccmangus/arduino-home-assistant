@@ -6,7 +6,8 @@
 
 HABinarySensor::HABinarySensor(const char* uniqueId) :
     HABaseDeviceType(AHATOFSTR(HAComponentBinarySensor), uniqueId),
-    _class(nullptr),
+    _deviceClass(nullptr),
+    _stateClass(nullptr),
     _icon(nullptr),
     _enableByDefault(true),
     _entityCategory(nullptr),
@@ -48,7 +49,8 @@ void HABinarySensor::buildSerializer()
     _serializer->set(AHATOFSTR(HANameProperty), _name);
     _serializer->set(AHATOFSTR(HAObjectIdProperty), _objectId);
     _serializer->set(HASerializer::WithUniqueId);
-    _serializer->set(AHATOFSTR(HADeviceClassProperty), _class);
+    _serializer->set(AHATOFSTR(HADeviceClassProperty), _deviceClass);
+    _serializer->set(AHATOFSTR(HAStateClassProperty), _stateClass);
     _serializer->set(AHATOFSTR(HAIconProperty), _icon);
     _serializer->set(AHATOFSTR(HAEntityCategory), _entityCategory);
 
