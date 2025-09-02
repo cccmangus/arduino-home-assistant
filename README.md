@@ -1,8 +1,3 @@
-This fork adds core support for the alarm_control_panel entity, including arm/disarm code validation, and a corresponding example ino.
-
-This change also adds the enable_by_default and entity_category properties to the most common entities (sensor, number, binary_sensory, button, select). This is useful for adding configuration and control entities that are correctly categorized and exposed in the device UI in HA, as well as enabling you to hide them by default (if, for example, most people wouldn't need access to them but can enable access themselves after discovery.)
-
-
 # Arduino Home Assistant integration 🏠
 
 [![](https://img.shields.io/github/v/release/dawidchyrzynski/arduino-home-assistant?label=Version)](https://github.com/dawidchyrzynski/arduino-home-assistant/releases)
